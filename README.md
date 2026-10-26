@@ -1,22 +1,13 @@
-# Core Pile Optimiser v3
+# Core Pile Optimiser v4
 
-Streamlit concept tool for regular-grid and free-location pile layout optimisation.
+A Streamlit multipage application.
 
-## Main workflow
+- Page 1: regular candidate pile-layout search.
+- Page 2: bespoke engineer-defined pile coordinates and free core-centre coordinates.
+- Loads and combinations are shared through Streamlit session state.
+- The exact discrete pile-group no-tension kern is always plotted on both pages.
+- On Page 2, load-component moments are entered about the core centre. The axial load is transferred to the pile-group centroid using `Mx += N*dy` and `My += N*dx`.
 
-- **Loads tab:** enter Dead, Live, Wx and Wy as separate signed load components. Use **+ Add load component** for additional actions.
-- **Combinations tab:** define editable factors and select `Compression`, `Tension`, or `No tension` for each combination.
-- Default combinations are D+L, D+L+Wx, D+L+Wy, 0.9D+Wx and 0.9D+Wy.
-- Set **Maximum results to create** to stop the free search when enough feasible alternatives have been found.
+Upload all files and the `pages` folder to a GitHub repository. Deploy `app.py` on Streamlit Community Cloud.
 
-## Free-search speed
-
-The free mode now uses smaller practical defaults, early stopping after no improvement, ascending pile-count search, and a hard maximum number of returned results. Keep the pile range narrow, e.g. 20 to 24, for quick preliminary studies.
-
-## Deploy
-
-Upload all files to the root of a GitHub repository. In Streamlit Community Cloud choose `app.py` as the main file.
-
-## Engineering limitations
-
-Rigid cap and equal pile axial stiffness are assumed. This is not pile-cap, pile structural, geotechnical group, or soil-structure interaction design. Check all results independently.
+This is a preliminary rigid-cap, equal-pile-stiffness tool. It does not replace pile, pile-cap, geotechnical group or soil-structure interaction design.
