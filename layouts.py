@@ -1,56 +1,26 @@
-from __future__ import annotations
-
 import numpy as np
 
+def regular_grid(nx, ny, sx, sy):
+    xs = (np.arange(nx)-(nx-1)/2)*sx
+    ys = (np.arange(ny)-(ny-1)/2)*sy
+    return np.array([(x,y) for y in ys for x in xs], dtype=float)
 
-def centred_regular_grid(nx: int, ny: int, sx: float, sy: float) -> np.ndarray:
-    x = (np.arange(nx) - (nx - 1) / 2.0) * sx
-    y = (np.arange(ny) - (ny - 1) / 2.0) * sy
-    return np.array([(xi, yi) for yi in y for xi in x], dtype=float)
+def perimeter_grid(nx, ny, sx, sy):
+    p = regular_grid(nx, ny, sx, sy)
+    return p[np.isclose(abs(p[:,0]), max(abs(p[:,0]))) | np.isclose(abs(p[:,1]), max(abs(p[:,1])))]
 
-
-def centred_perimeter_grid(nx: int, ny: int, sx: float, sy: float) -> np.ndarray:
-    grid = centred_regular_grid(nx, ny, sx, sy)
-    xmax = np.max(np.abs(grid[:, 0]))
-    ymax = np.max(np.abs(grid[:, 1]))
-    mask = np.isclose(np.abs(grid[:, 0]), xmax) | np.isclose(np.abs(grid[:, 1]), ymax)
-    return grid[mask]
-
-
-def seed_free_layout(
-    n_piles: int,
-    max_width: float,
-    max_depth: float,
-    min_spacing: float,
-    rng: np.random.Generator,
-    attempts: int = 4000,
-) -> np.ndarray | None:
-    """Sequential random placement with some boundary bias for moment resistance."""
-    points: list[np.ndarray] = []
-    half_w = max_width / 2.0
-    half_d = max_depth / 2.0
-
+def random_layout(n, limits, rng, attempts=5000):
+    points=[]
     for _ in range(attempts):
-        if len(points) >= n_piles:
-            break
-
-        if rng.random() < 0.55:
-            # Bias some seeds towards the outer bands, while retaining full freedom.
-            side = rng.integers(4)
-            if side == 0:
-                candidate = np.array([rng.uniform(-half_w, half_w), rng.uniform(0.65 * half_d, half_d)])
-            elif side == 1:
-                candidate = np.array([rng.uniform(-half_w, half_w), rng.uniform(-half_d, -0.65 * half_d)])
-            elif side == 2:
-                candidate = np.array([rng.uniform(0.65 * half_w, half_w), rng.uniform(-half_d, half_d)])
-            else:
-                candidate = np.array([rng.uniform(-half_w, -0.65 * half_w), rng.uniform(-half_d, half_d)])
+        if len(points)==n: return np.asarray(points)
+        # 60% edge-biased candidates improve overturning resistance and convergence.
+        if rng.random() < .6:
+            side=rng.integers(4); hw=limits.max_width/2; hd=limits.max_depth/2
+            if side==0: q=np.array([rng.uniform(-hw,hw), rng.uniform(.65*hd,hd)])
+            elif side==1: q=np.array([rng.uniform(-hw,hw), rng.uniform(-hd,-.65*hd)])
+            elif side==2: q=np.array([rng.uniform(.65*hw,hw), rng.uniform(-hd,hd)])
+            else: q=np.array([rng.uniform(-hw,-.65*hw), rng.uniform(-hd,hd)])
         else:
-            candidate = np.array([rng.uniform(-half_w, half_w), rng.uniform(-half_d, half_d)])
-
-        if all(np.linalg.norm(candidate - point) >= min_spacing for point in points):
-            points.append(candidate)
-
-    if len(points) != n_piles:
-        return None
-    return np.asarray(points, dtype=float)
+            q=np.array([rng.uniform(-limits.max_width/2, limits.max_width/2), rng.uniform(-limits.max_depth/2, limits.max_depth/2)])
+        if all(np.linalg.norm(q-a)>=limits.min_spacing for a in points): points.append(q)
+    return None
