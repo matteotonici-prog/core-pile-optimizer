@@ -1,90 +1,22 @@
-# Core Pile Layout Optimiser
+# Core Pile Optimiser v3
 
-A Streamlit concept-design tool that searches for pile layouts beneath structural cores.
+Streamlit concept tool for regular-grid and free-location pile layout optimisation.
 
-## Two optimisation modes
+## Main workflow
 
-1. **Force regular pile grid**
-   - Searches centred rectangular full grids.
-   - Optionally searches perimeter-only rectangular grids.
-   - Varies spacing independently in X and Y.
+- **Loads tab:** enter Dead, Live, Wx and Wy as separate signed load components. Use **+ Add load component** for additional actions.
+- **Combinations tab:** define editable factors and select `Compression`, `Tension`, or `No tension` for each combination.
+- Default combinations are D+L, D+L+Wx, D+L+Wy, 0.9D+Wx and 0.9D+Wy.
+- Set **Maximum results to create** to stop the free search when enough feasible alternatives have been found.
 
-2. **Allow free pile locations**
-   - Uses a custom genetic search.
-   - Every pile has an independent X and Y coordinate.
-   - Enforces the maximum footprint and minimum centre-to-centre distance.
-   - Allows a constructability preference without forcing a grid.
+## Free-search speed
 
-## Engineering model
+The free mode now uses smaller practical defaults, early stopping after no improvement, ascending pile-count search, and a hard maximum number of returned results. Keep the pile range narrow, e.g. 20 to 24, for quick preliminary studies.
 
-The app assumes:
+## Deploy
 
-- A rigid pile cap.
-- Equal axial stiffness for every pile.
-- Positive axial load means compression.
-- Positive Mx adds compression at positive Y.
-- Positive My adds compression at positive X.
-- Gravity load cases must keep all piles in compression.
-- Wind/non-gravity load cases may use the entered tension capacity.
+Upload all files to the root of a GitHub repository. In Streamlit Community Cloud choose `app.py` as the main file.
 
-For irregular layouts, the full coupled pile-group geometry matrix is solved, including the `sum(x*y)` term.
+## Engineering limitations
 
-## Important limitation
-
-This is a preliminary layout optimiser, not a final foundation design tool. It does not currently include:
-
-- Different pile axial stiffnesses.
-- P-y interaction or soil springs.
-- Pile-group geotechnical effects.
-- Pile-cap bending, shear, punching or strut-and-tie design.
-- Core-wall load introduction.
-- Accidental eccentricity.
-- Construction tolerances.
-- Code-specific load combinations or partial factors.
-
-All inputs and outputs must be checked by a suitably qualified engineer.
-
-## Run on Streamlit Community Cloud
-
-1. Create a new GitHub repository.
-2. Upload all files from this project to the repository root.
-3. Commit the files.
-4. Open Streamlit Community Cloud.
-5. Select the repository and branch.
-6. Set the main file path to `app.py`.
-7. Deploy.
-
-## Run locally
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-On Windows, activate the virtual environment with:
-
-```text
-.venv\Scripts\activate
-```
-
-## Suggested first settings
-
-- Optimisation mode: regular grid first.
-- Then switch to free pile locations.
-- Free search population: 60.
-- Generations: 80.
-- Keep the pile-count range narrow for faster runs, for example 18 to 24.
-- Use both positive and negative wind directions.
-
-## Files
-
-- `app.py`: Streamlit interface.
-- `models.py`: data classes.
-- `pilegroup.py`: reaction analysis and geometry utilities.
-- `evaluator.py`: constraints and scoring.
-- `layouts.py`: regular and free-layout seeds.
-- `optimizer_regular.py`: regular-grid search.
-- `optimizer_free.py`: genetic free-location search.
-- `plotting.py`: Plotly plan and reaction display.
+Rigid cap and equal pile axial stiffness are assumed. This is not pile-cap, pile structural, geotechnical group, or soil-structure interaction design. Check all results independently.
