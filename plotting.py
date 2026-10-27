@@ -24,11 +24,23 @@ def make_figure(solution, load_case, limits):
                   line=dict(dash="dash", color="#64748b"))
 
     # Classic no-tension kern (independent of load)
-    k = g.kern() + g.centroid
-    if len(k):
-        k = _closed(k)
-        fig.add_trace(go.Scatter(x=k[:,0], y=k[:,1], mode="lines", name="Kern (no tension)",
-                      fill="toself", line=dict(color="#2563eb"), fillcolor="rgba(37,99,235,0.15)"))
+       try:
+        k = g.kern() + g.centroid
+        if len(k):
+            k = _closed(k)
+            fig.add_trace(go.Scatter(x=k[:,0], y=k[:,1], mode="lines", name="Kern (no tension)",
+                          fill="toself", line=dict(color="#2563eb"), fillcolor="rgba(37,99,235,0.15)"))
+        if load_case.n > 1e-9:
+            lo, hi = _bounds(load_case, limits)
+            dom = g.reaction_domain(load_case.n, lo, hi)
+            if len(dom):
+                dom = _closed(dom / load_case.n + g.centroid)
+                fig.add_trace(go.Scatter(x=dom[:,0], y=dom[:,1], mode="lines",
+                              name="Capacity domain (this combination)",
+                              line=dict(color="#7c3aed", dash="dash")))
+    except Exception as e:
+        fig.add_annotation(text=f"Kern overlay unavailable: {type(e).__name__}: {e}",
+                           xref="paper", yref="paper", x=0, y=1.08, showarrow=False)
 
     # Where the resultant of THIS combination may sit, given pile capacities
     if load_case.n > 1e-9:
