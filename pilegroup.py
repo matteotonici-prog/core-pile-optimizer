@@ -32,3 +32,30 @@ def footprint(coordinates):
     p = np.asarray(coordinates, dtype=float)
     w, d = float(np.ptp(p[:, 0])), float(np.ptp(p[:, 1]))
     return w, d, w*d
+
+def _clip(poly, a, b):
+    """Keep the part of a convex polygon where a·x <= b (Sutherland–Hodgman)."""
+    out = []
+    for P, Q in zip(poly, np.roll(poly, -1, axis=0)):
+        fp, fq = a @ P - b, a @ Q - b
+        if fp <= 0: out.append(P)
+        if fp * fq < 0: out.append(P + (Q - P) * fp / (fp - fq))
+    return np.array(out)
+
+    # inside class PileGroup
+    def reaction_domain(self, n=1.0, r_min=0.0, r_max=None, bound=1e9):
+        """Polygon of (my, mx) about the centroid for which every pile reaction
+        stays within [r_min, r_max] at axial load n. Empty array if infeasible.
+        Divide by n (n>0) to get the resultant eccentricity (ex, ey)."""
+        A = self.relative @ np.linalg.inv(self.matrix)       # row i = (M⁻¹ q_i)ᵀ
+        poly = np.array([[-bound,-bound],[bound,-bound],[bound,bound],[-bound,bound]])
+        base = n / len(self.relative)
+        for a in A:
+            poly = _clip(poly, -a, base - r_min)                          # R_i >= r_min
+            if r_max is not None and len(poly): poly = _clip(poly, a, r_max - base)  # R_i <= r_max
+            if len(poly) == 0: break
+        return poly
+
+    def kern(self):
+        """No-tension kern as eccentricity (ex, ey) from the centroid."""
+        return self.reaction_domain(1.0, 0.0, None)
